@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>搜索</title>
+
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<script type="text/javascript" src="js/jquery-3.3.1.min.js" ></script>
+	<script type="text/javascript" src="js/bootstrap.min.js" ></script>
+    <style type="text/css" >
+		body { padding-top: 50px; }
+		html { overflow-y: scroll; }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+
+<!-- 菜单栏 -->
+<div id="topMenu"></div>
+
+   <div class="form-group" style="margin-top:30px">
+    <textarea id="questionContent" class="form-control" rows="5" maxlength="200"></textarea>
+   </div>
+   <div style="text-align:right">
+    <button onclick="submit()" type="submit" class="btn btn-info" >提交</button>
+   </div>
+	<br /><br />
+<div id="user-question-id" style="display: none">
+
+</div>	
+
+ <div style="text-align: center">
+<nav aria-label="Page navigation">
+  <ul id="page-id" class="pagination">
+   		<!--后续页-->
+  </ul>
+</nav>
+</div>	
+	
+</div><!--containt结束-->
+
+<script type="text/javascript">
+
+var openid = getUrlParam("openid");
+//添加头部
+ $("#topMenu").load("topMenu.html");
+
+//计算页数
+var currentPage = 1;
+var maxPage = 5;
+var pageSize = 10;
+function count(obj,page){
+	if(page == 0){
+		currentPage = obj.innerText;//获取标签中的值
+		pageList(currentPage);
+	}
+	else if(page == -1){
+		currentPage = Number(currentPage) - 1;
+		if(currentPage < 1){
+			alert("无效翻页");
+		}else{
+			pageList(currentPage);
+		}				
+	}else{
+		currentPage = Number(currentPage) + 1;
+		if(currentPage > maxPage){
+			alert("无效翻页");
+		}else{
+			pageList(currentPage);
+		}	
+	}
+}
+
+//默认显示第一页
+$(function(){
+	if(openid!= null && openid!=''){
+	  	pageList(1);
+	}
+});
+
+//分页本用户所有提出的问题
+function pageList(currentPage){
+	$("#user-question-id").empty();
+	var params = {"visitorId" : openid,"currentPage" : currentPage};
+	if(openid!= null && openid!=''){
+		$.getJSON("getQuestionByUser",params,function(data){
+			var allQuesion = data.list;
+			//分页
+			var curPage   = parseInt(currentPage);
+			var startPage = 1;
+			if(curPage / pageSize -1 == 0){
+				startPage = curPage;
+			}
+			var endPage = data.pages;
+			maxPage = data.pages;
+			if(data.pages - startPage >= pageSize){
+				endPage = startPage + pageSize -1;
+			}
+			$("#page-id").html("");
+			$("#page-id").append('<li ><a href="#" onclick="count(this,-1)"><span aria-hidden="true">&laquo;</span></a></li>');
+			for(var i=startPage; i<=endPage; i++){
+				$("#page-id").append('<li><a href="#" onclick="count(this,0)">'+i+'</a></li>');
+			}
+		    $("#page-id").append('<li ><a href="#" onclick="count(this,1)"><span aria-hidden="true">&raquo;</span></a></li>');
+		    
+		    if(allQuesion.length >= 1){
+				$.each(allQuesion, function (i, a){
+					$("#user-question-id").append($(
+						"<div class='list-group'>"
+						+"<a id='aId' href='detail.html?id="+a.id+"&openid="+openid+"' class='list-group-item' target='_Blank'>"
+						+"<div class='alert alert-success' role='alert'><div> "+a.content+"</div>"
+						+"<div style='text-align: right'>"+a.createTime+"</div>"
+				 		//+'<p class="list-group-item-text">'+a.answerList[0].content+'</p>'  问题答案未定义
+						+"</div></a>"
+						+"</div>"
+					));
+				});
+				$("#user-question-id").show();
+			}
+	}); 
+	}
+}
+
+//提交问题
+function submit(){
+	var url = "askQuestion";
+	var $textarea = $("#questionContent").val();
+	if(openid!= null && openid!=''){
+		var params = {"visitorId" : openid,"questionContent" : $textarea};
+		$.getJSON(url,params,function(newQuestion){
+			$("#user-question-id").prepend($(
+					"<div class='list-group'>"
+					+"<a id='aId' href='detail.html?id="+newQuestion.id+"&openid="+openid+"' class='list-group-item' target='_Blank'>"
+					+"<div class='alert alert-success' role='alert'><div> "+$textarea+"</div>"
+					+"<div style='text-align: right'>"+newQuestion.createTime+"</div>"
+					+"</div></a>"
+					+"</div>"
+			));
+			$("#user-question-id").show();
+		});
+		$("#questionContent").val("");
+	}
+}
+
+//获取url的传参
+function getUrlParam(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+    var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+    if (r != null) return unescape(r[2]); return null; //返回参数值
+}
+</script>
+</body>
+</html>

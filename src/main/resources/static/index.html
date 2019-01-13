@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>搜索</title>
+
+	<!-- 导入 css-->
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<!--导入jquery.js-->
+	<script type="text/javascript" src="js/jquery-3.3.1.min.js" ></script>
+			
+	<!--导入bootstrap.js-->
+	<script type="text/javascript" src="js/bootstrap.min.js" ></script>
+  
+    <style type="text/css" >
+		body { padding-top: 50px; }
+		html { overflow-y: scroll; }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+	
+	<!-- 菜单栏 -->
+	<div id="topMenu"></div>
+	
+    <!-- 搜索框 -->
+	<div  style="text-align:center" >
+	
+	<form action="searchAnswer" name="search-form" method="get" id="search" role="form" >
+	<div style="margin-top:50px;" >
+		 <input id="word" type="text" class="form-control" maxlength="256"   name="word"  placeholder=""  onchange="change(this)"/><!---->
+	</div>
+	<div style="margin:10px;">
+		<input type="submit" class="btn btn-primary" value="搜索答案" />
+		<a id="addQuestion" class="btn btn-info" href="question.html" >我要提问</a>
+	</div>
+	</form>
+	</div>
+
+
+<!--搜寻结果-->
+
+<div id="showAnswer" style="display: none">	
+ <div id="tId" style="margin:10px;">
+ 
+				<!--动态添加查找答案位置-->
+ </div>
+ 
+<div style="text-align: center">
+<nav aria-label="Page navigation">
+  <ul id="page-id" class="pagination">
+   		<!--后续页-->
+  </ul>
+</nav>
+</div>	
+
+</div>
+</div><!--containt结束-->
+
+<script type="text/javascript">
+
+var openid = getUrlParam("openid");
+$("#addQuestion").attr("href","question.html?openid="+openid);	
+$("#topMenu").load("topMenu.html");//添加头部	
+
+		
+		$(function(){//表单提交显示第一页
+			$("form").submit(function(e){
+			    e.preventDefault();
+			    pageList(1);
+			});
+		});
+		
+		//计算页数
+		var currentPage = 1;
+		var maxPage = 5;
+		var pageSize = 10;
+		function count(obj,page){
+			if(page == 0){
+				currentPage = obj.innerText;//获取标签中的值
+				pageList(currentPage);
+			}
+			else if(page == -1){
+				currentPage = Number(currentPage) - 1;
+				if(currentPage < 1){
+					alert("无效翻页");
+				}else{
+					pageList(currentPage);
+				}				
+			}else{
+				currentPage = Number(currentPage) + 1;
+				if(currentPage > maxPage){
+					alert("无效翻页");
+				}else{
+					pageList(currentPage);
+				}	
+			}
+		}
+		//分页遍历答案
+		function pageList(currentPage){
+			$("#tId").empty();//以前答案清空
+		    var url = "searchByWord";
+		    var $value=$("#word").val();
+		    if($value!= null && $value!=''){
+		    	var params = {"visitorId" : openid, "keyword": $value, "currentPage": currentPage};
+				$.getJSON(url,params,function(data){
+					var curPage   = parseInt(currentPage);
+					var startPage = 1;
+					if(curPage / pageSize -1 == 0){
+						startPage = curPage;
+					}
+					var endPage = data.pages;
+					maxPage = data.pages;
+					if(data.pages - startPage >= pageSize){
+						endPage = startPage + pageSize -1;
+					}
+					$("#page-id").html("");
+					$("#page-id").append('<li ><a href="#" onclick="count(this,-1)"><span aria-hidden="true">&laquo;</span></a></li>');
+					for(var i=startPage; i<=endPage; i++){
+						$("#page-id").append('<li><a href="#" onclick="count(this,0)">'+i+'</a></li>');
+					}
+				    $("#page-id").append('<li ><a href="#" onclick="count(this,1)"><span aria-hidden="true">&raquo;</span></a></li>');
+				  //添加答案
+					if(data.list.length >= 1){//问题长度，由于PageInfo包装后，获取问题链表调用list属性
+						$.each(data.list, function (i, a){
+							if(a.answerList.length >= 1){//答案长度
+								$("#tId").append($(
+									'<div class="list-group">'
+									+'<a  href="detail.html?id='+a.id+'&openid='+openid+'" class="list-group-item" target="_Blank">'
+									+'<h4 class="list-group-item-heading">'+a.content+'</h4>'
+							 		+'<p class="list-group-item-text">'+a.answerList[0].content
+									+'</p>'
+									+'</a>'
+									+'</div>'
+								));
+							}else{
+								$("#tId").append($(
+										'<div class="list-group">'
+										+'<a  href="detail.html?id='+a.id+'&openid='+openid+'" class="list-group-item" target="_Blank">'
+										+'<h4 class="list-group-item-heading">'+a.content+'</h4>'
+								 		+'<p class="list-group-item-text"></p></a></div>'
+								));
+							}
+						});	
+					}else{
+						alert("换个问题试试^.^");
+					}																	
+				});
+				$("#showAnswer").show();
+			}
+		}
+		
+		//获取url的传参
+		 function getUrlParam(name) {
+	         var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+	         var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+	         if (r != null) return unescape(r[2]); return null; //返回参数值
+	     }
+		
+		/*可扩展为联想搜索*/
+		function change(obj){
+			$(obj).css("background-color","#FFFFCC");
+		}
+
+  	</script>
+</body>
+</html>

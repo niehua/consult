@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>个人资料</title>
+
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<script type="text/javascript" src="js/jquery-3.3.1.min.js" ></script>
+	<script type="text/javascript" src="js/bootstrap.min.js" ></script>
+    <style type="text/css" >
+		body { padding-top: 50px; }
+		html { overflow-y: scroll; }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+
+<!-- 菜单栏 -->
+<!-- 菜单栏 -->
+<nav class="navbar navbar-inverse navbar-fixed-top">
+  <div class="container">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a id="topSearch" class="navbar-brand" href="/"><span class="glyphicon glyphicon-search" aria-hidden="true"></span></a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+        <li><a id="topQuestionList"  href="#">帮助他人</a></li>
+
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li ><a id="msg-id" href="#">消息 <span id="msg-num" class="badge">0</span></a></li>
+        <li><img id="headimgurl" class="img-circle"  style="height: 50px;max-width: 100%;" src="#" /></li>
+        <li class="dropdown">
+          <a href="#" id="nickname" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">我<span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a id="personalData"  href="personalData.html">个人资料</a></li>
+			<!--<li onclick="javascript:window.opener=null;window.open('','_self');window.close();"><a href="#">退出帐号</a></li>-->
+          </ul>
+        </li>
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container -->
+</nav>
+
+<br /><br />
+
+
+
+<div class="panel panel-default">
+  <!-- Default panel contents -->
+  <div class="panel-heading">个人资料</div>
+  <div class="panel-body">
+   <p><img id="headimgurlPeo" class="img-circle"  style="height: 80px;max-width: 100%;" src="#" /></p>
+  </div>
+
+  <!-- List group -->
+  <ul class="list-group">
+    <li id="nicknamePeo" class="list-group-item list-group-item-success"></li>
+    <li id="sexPeo" class="list-group-item list-group-item-info"></li>
+    <li id="provincePeo" class="list-group-item list-group-item-warning"></li>
+  </ul>
+</div>
+
+	
+</div>
+
+<script type="text/javascript">
+
+//加载头部
+var openid = getUrlParam("openid");
+$("#topQuestionList").attr("href","solveQuestion.html?openid="+openid);
+$("#personalData").attr("href","personalData.html?openid="+openid);
+$("#topSearch").attr("href","index.html?openid="+openid);
+$("#msg-id").attr("href","newMessage.html?openid="+openid);
+
+var topNickname="";
+var topHeadImgUrl="";
+var topSex="";
+var topProvince="";
+/*获取用户信息*/
+$.ajaxSettings.async = false;
+if(openid!= null && openid!=''){
+	$.getJSON("userDetail",{"visitorId": openid},function(data){
+	topNickname = data.nickname;
+	topHeadImgUrl = data.headImgUrl;
+	topSex = data.sex;
+	topProvince = data.province;
+	$("#nickname").html(topNickname+'<span class="caret">');
+	$("#headimgurl").attr("src",topHeadImgUrl);	
+	});
+	$.getJSON("getNumberOfNewMessage",{"visitorId": openid},function(data){
+		$("#msg-num").text(data);
+	});	
+}	
+$.ajaxSettings.async = true; 
+//获取url的传参
+function getUrlParam(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+    var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+    if (r != null) return unescape(r[2]); return null; //返回参数值
+}
+
+window.onload=function(){
+	if(openid!= null && openid!=''){
+			$("#headimgurlPeo").attr("src",topHeadImgUrl);	
+			$("#nicknamePeo").text("昵称："+topNickname);
+			var s = "男";
+			if(topSex == 2){
+				s = "女";
+			}
+			else if(topSex == 0){
+				s = "未知";
+			}
+			$("#sexPeo").text("性别："+s);
+			$("#provincePeo").text("省份："+topProvince);
+	}	 
+}
+
+//获取url的传参
+function getUrlParam(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+    var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+    if (r != null) return unescape(r[2]); return null; //返回参数值
+}
+</script>
+</body>
+</html>

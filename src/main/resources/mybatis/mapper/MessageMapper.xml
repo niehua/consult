@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.edu.ustb.consult.mapper.MessageMapper" >
+  <resultMap id="BaseResultMap" type="cn.edu.ustb.consult.entity.Message" >
+    <id column="id" property="id" jdbcType="INTEGER" />
+    <result column="content" property="content" jdbcType="VARCHAR" />
+    <result column="reciever_id" property="recieverId" jdbcType="VARCHAR" />
+    <result column="sender_id" property="senderId" jdbcType="VARCHAR" />
+    <result column="answer_id" property="answerId" jdbcType="INTEGER" />
+    <result column="has_read" property="hasRead" jdbcType="BIT" />
+    <result column="type_flag" property="typeFlag" jdbcType="TINYINT" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, content, reciever_id, sender_id, answer_id, has_read, type_flag, create_time
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.Integer" >
+    select 
+    <include refid="Base_Column_List" />
+    from message
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer" >
+    delete from message
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="cn.edu.ustb.consult.entity.Message" >
+    insert into message (id, content, reciever_id, 
+      sender_id, answer_id, has_read, 
+      type_flag, create_time)
+    values (#{id,jdbcType=INTEGER}, #{content,jdbcType=VARCHAR}, #{recieverId,jdbcType=VARCHAR}, 
+      #{senderId,jdbcType=VARCHAR}, #{answerId,jdbcType=INTEGER}, #{hasRead,jdbcType=BIT}, 
+      #{typeFlag,jdbcType=TINYINT}, #{createTime,jdbcType=TIMESTAMP})
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+  </insert>
+  <insert id="insertSelective" parameterType="cn.edu.ustb.consult.entity.Message" >
+    insert into message
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="content != null" >
+        content,
+      </if>
+      <if test="recieverId != null" >
+        reciever_id,
+      </if>
+      <if test="senderId != null" >
+        sender_id,
+      </if>
+      <if test="answerId != null" >
+        answer_id,
+      </if>
+      <if test="hasRead != null" >
+        has_read,
+      </if>
+      <if test="typeFlag != null" >
+        type_flag,
+      </if>
+      <if test="createTime != null" >
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="content != null" >
+        #{content,jdbcType=VARCHAR},
+      </if>
+      <if test="recieverId != null" >
+        #{recieverId,jdbcType=VARCHAR},
+      </if>
+      <if test="senderId != null" >
+        #{senderId,jdbcType=VARCHAR},
+      </if>
+      <if test="answerId != null" >
+        #{answerId,jdbcType=INTEGER},
+      </if>
+      <if test="hasRead != null" >
+        #{hasRead,jdbcType=BIT},
+      </if>
+      <if test="typeFlag != null" >
+        #{typeFlag,jdbcType=TINYINT},
+      </if>
+      <if test="createTime != null" >
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Integer">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="cn.edu.ustb.consult.entity.Message" >
+    update message
+    <set >
+      <if test="content != null" >
+        content = #{content,jdbcType=VARCHAR},
+      </if>
+      <if test="recieverId != null" >
+        reciever_id = #{recieverId,jdbcType=VARCHAR},
+      </if>
+      <if test="senderId != null" >
+        sender_id = #{senderId,jdbcType=VARCHAR},
+      </if>
+      <if test="answerId != null" >
+        answer_id = #{answerId,jdbcType=INTEGER},
+      </if>
+      <if test="hasRead != null" >
+        has_read = #{hasRead,jdbcType=BIT},
+      </if>
+      <if test="typeFlag != null" >
+        type_flag = #{typeFlag,jdbcType=TINYINT},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="cn.edu.ustb.consult.entity.Message" >
+    update message
+    set content = #{content,jdbcType=VARCHAR},
+      reciever_id = #{recieverId,jdbcType=VARCHAR},
+      sender_id = #{senderId,jdbcType=VARCHAR},
+      answer_id = #{answerId,jdbcType=INTEGER},
+      has_read = #{hasRead,jdbcType=BIT},
+      type_flag = #{typeFlag,jdbcType=TINYINT},
+      create_time = #{createTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

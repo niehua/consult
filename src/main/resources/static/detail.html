@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<title>答案</title>
+
+	<!-- 导入 css-->
+	<link type="text/css" rel="stylesheet" href="css/dianzan.css" />
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<!--导入jquery.js-->
+	<script type="text/javascript" src="js/jquery-3.3.1.min.js" ></script>
+			
+	<!--导入bootstrap.js-->
+	<script type="text/javascript" src="js/bootstrap.min.js" ></script>
+  
+    <style type="text/css" >
+		body { padding-top: 50px; }
+		html { overflow-y: scroll; }
+    </style>
+	<!--动态点赞结束-->
+
+</head>
+<body>
+
+<div class="container">
+
+<!-- 菜单栏 -->
+	<div id="topMenu"></div>
+	
+<!--答案详情-->
+
+<div style="display: none"></div>
+
+  <div class="page-header"><!--题目-->
+	  <h3 id="h3Id" style="display: inline"></h3>
+	  <h6><a id="myAnswer"  href="#" >我有更好的答案</a></h6>
+  </div>
+	
+   <div class="progress">
+	 <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" style="width: 100%">
+	  <span>推荐答案</span>
+	 </div>
+   </div>
+	
+   <div id="pId" class="alert alert-success" role="alert">
+   		   <!--答案-->
+   </div>
+   
+  <div id="main-zan">
+		  <!--动态点赞开始-->
+  </div>
+   <br />
+
+<div id="showDetailOther"  style="display: none">
+
+ <div class="progress" >
+   <div class="progress-bar progress-bar-success progress-bar-striped" role="progressbar" style="width: 100%">
+    <span>其他答案</span>
+   </div>
+ </div>
+ 
+<div id="other">
+	<!--答案-->
+</div>
+   
+</div>
+
+</div><!-- container结束 -->
+
+<!-- 添加答案 -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+ <div class="modal-dialog" role="document">
+ <div class="modal-content">
+ 
+ <div class="modal-header">
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+  <h4 class="modal-title" id="myModalLabel">我的答案</h4>
+ </div>
+ <div class="modal-body">
+  <div class="form-group">
+   <!--<label for="txt_departmentname">答案</label>
+   <input type="text"  class="form-control" id="txt" placeholder="我的答案">-->
+   <div class="form-group" style="margin-top:30px">
+    <textarea id="txt" class="form-control" rows="5"  maxlength="1000"></textarea>
+   </div>
+  </div>
+ </div>
+ <div class="modal-footer">
+  <button type="button" class="btn btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span>关闭</button>
+  <button type="button" id="btn_submit" class="btn btn-primary" data-dismiss="modal"><span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>发表</button>
+ </div>
+ 
+ </div>
+ </div>
+</div>
+ 
+
+
+<script type="text/javascript">
+
+var questionId = getUrlParam("id");
+var openid = getUrlParam("openid");
+
+//添加头部
+$("#topMenu").load("topMenu.html");
+
+	 //查看评论
+	 function commentClick(i,answerId,commentPlace){
+		$("#"+commentPlace).empty();
+		var commentId = "#comment-id"+i;
+		$(commentId).toggle();
+		if($(commentId).css("display")!="block"){
+			return;
+		}
+		var url = "getCommentListByAnswerId";
+		var params = {"visitorId" : openid, "answerId" : answerId};
+		$.getJSON(url,params,function(data){	
+			$.ajaxSettings.async = false;
+			$.each(data, function (i, a){
+				$.getJSON("userDetail","visitorId="+a.authorId,function(dataUser){	
+					$("#"+commentPlace).append(
+						"<hr style='border:1 dashed #987cb9' width='100%' color='#987cb9' SIZE='5' />"
+						+"<span><img class='img-circle'  style='height: 30px;max-width: 100%;' src="+dataUser.headImgUrl+" /></span>"
+						+"<span>"+dataUser.nickname+" </span><span> "+a.createTime+"</span>"
+						+"<div style='margin-top: 8px'>"+a.content
+					)	
+				});		
+			});
+			$.ajaxSettings.async = true; 
+		});
+	 }
+	 
+	 //发表评论
+	 function publishComment(answerId,commentPlace,commentTextarea){
+		var url = "commentAnswer";
+		var $commentContent = $("#"+commentTextarea).val();
+		if($commentContent!= null && $commentContent!=''){
+			var params = {"visitorId" : openid, "answerId" : answerId,"commentContent" : $commentContent};
+			//提交数据
+			$.getJSON(url,params);
+						
+			$.ajaxSettings.async = false;
+			var topNickname = "";
+			var topHeadimgurl = "";	
+			/*获取用户信息*/
+			if(openid!= null && openid!=''){
+				$.getJSON("userDetail",{"visitorId": openid},function(data){
+				 	topNickname = data.nickname;
+					topHeadimgurl = data.headImgUrl;	
+				});
+			}	
+			$.ajaxSettings.async = true; 
+			$("#"+commentPlace).append(
+				"<hr style='border:1 dashed #987cb9' width='100%' color='#987cb9' SIZE='5' />"
+				+"<span><img class='img-circle'  style='height: 30px;max-width: 100%;' src="+topHeadimgurl+" /></span>"
+				+"<span>"+topNickname+" </span><span> "+CurentTime()+"</span>"
+				+"<div style='margin-top: 8px'>"+$commentContent
+			)	
+			$("#"+commentTextarea).val("");
+		}
+	 }	 
+	 
+	 /*详情查看*/
+	 window.onload=function(){
+	 //$(function(){
+		var url = "getQuestionDetail";
+		if(questionId!= null && questionId!=''){
+			var params = {"visitorId":openid, "questionId":questionId, "currentPage":1};
+			$.getJSON(url,params,function(data){//返回的使json数组
+				var aList = data.answerList;
+				$("#h3Id").html(data.content);//问题
+				var len = aList.length;
+				
+				//alert(len);
+				for(var i=0; i<len; i++){
+					var srcZan = "images/zan.png";
+					if(i == 0){
+						//查找头像和昵称
+						var headimgurl = "";
+						var nickname = "";
+						var openid = "";//查看个人资料，由于没session，有问题，personalData.html?openid="+openid+"
+						$.ajaxSettings.async = false;
+						$.getJSON("userDetail","visitorId="+aList[0].authorId,function(dataUser){
+							    nickname   = dataUser.nickname;
+								headimgurl = dataUser.headImgUrl;
+								openid     = dataUser.id;
+						});				
+						$.ajaxSettings.async = true; 
+						//推荐答案
+						$("#pId").html(aList[0].content);//回答
+						var hasLiked = aList[0].liked;
+						if(hasLiked){
+							srcZan = "images/yizan.png"
+						}
+						//点赞
+						var temp0 = "outImg0";
+						var temp1 = "count0";
+						var temp2 = "add0";
+						var temp3 = "img0";
+						//评论
+						var temp4 = "comment0";
+						//添加评论
+						var temp5 = "comment-textarea0";
+						$("#main-zan").append(
+					
+						"<div style='float:left'>"
+						+"<span><img class='img-circle'  style='height: 30px;max-width: 100%;' src="+headimgurl+" /></span><span>"+nickname+" </span>"
+						+"<div style='text-align:left'>"+aList[0].createTime+"</div>"
+						+"</div>"
+						+"<div style='float: right'>"
+						+"<div style='float: left;margin-right: 5px'><img  src='images/comment.png'><a onclick='commentClick(0,"+aList[0].id+ ",\""+ temp4 + "\")' href='javascript:void(0)'>评论("+aList[0].commentNumber+")</a></div>"
+						+"<div style='float: right' class='praise'>"
+						+"<span id='outImg0' onclick='zan("+aList[0].id+ ",\""+ temp0 + "\",\""+ temp1 + "\",\""+ temp2 + "\",\""+ temp3 + "\")' ><img id='img0'  src="+srcZan+" /></span>"
+						+"<span id='count0' class='praise-txt'>"+aList[0].likeNumber+"</span>"
+						+"<span id='add0' class='add-num'><em>+1</em></span>"
+						+"</div>"
+						+"</div>"
+						+"<div style='clear: both'></div>"
+						//评论
+						+"<div id='comment-id0' style='display: none; margin: 5px;padding: 5px;border-style: solid;"
+						+"	  border-width: 1px;border-color: #BBFFFF;background-color: #EFFFFF'>"
+						+"<textarea id='comment-textarea0' class='form-control' rows='4' maxlength='50'></textarea>"			  
+						+"  <div  style='text-align: right;margin-top: 5px'> <button onclick='publishComment("+aList[0].id+ ",\""+ temp4 + "\",\""+ temp5 + "\")' type='button' class='btn btn-success' >发布评论</button></div>"
+						+"<div id='comment0'></div>"
+						+"</div>"
+						);				
+							
+					}else{
+						//查找头像和昵称
+						var headimgurl = "";
+						var nickname = "";
+						$.ajaxSettings.async = false;
+						$.getJSON("userDetail",{"visitorId": aList[i].authorId},function(dataUser){	
+								nickname   = dataUser.nickname;
+								headimgurl = dataUser.headImgUrl;
+						});				
+						$.ajaxSettings.async = true; 
+						
+						var hasLiked = aList[i].liked;
+						if(hasLiked){
+							srcZan = "images/yizan.png"
+						}
+						//点赞
+						var temp0 = "outImg"+i;
+						var temp1 = "count"+i;
+						var temp2 = "add"+i;
+						var temp3 = "img"+i;
+						//评论
+						var temp4 = "comment"+i;
+						//添加评论
+						var temp5 = "comment-textarea"+i;
+						$("#other").append(
+						"<div style='clear: both'></div>"
+						+"<div class='alert alert-success' role='alert'> "+aList[i].content+"</div>"
+						
+						+"<div style='float: left'>"
+						+"<span><img class='img-circle'  style='height: 30px;max-width: 100%;' src="+headimgurl+" /></span><span>"+nickname+"</span>"
+						+"<div style='text-align:left'> "+aList[i].createTime+"</div>"						
+						+"</div>"
+						+"<div style='float: right'>"
+						+"<div style='float: left;margin-right: 5px'><img  src='images/comment.png'><a onclick='commentClick("+i+","+aList[i].id+ ",\""+ temp4 + "\")' href='javascript:void(0)'>评论("+aList[i].commentNumber+")</a></div>"
+						+"<div style='float: right' class='praise'>"
+						+"<span id="+temp0+" onclick='zan("+aList[i].id+ ",\""+ temp0 + "\",\""+ temp1 + "\",\""+ temp2 + "\",\""+ temp3 + "\")'><img id="+temp3+" src="+srcZan+" /></span>"
+						+"<span id="+temp1+" class='praise-txt'>"+aList[i].likeNumber+"</span>"
+						+"<span id="+temp2+" class='add-num'><em>+1</em></span>"
+						+"</div></div>"
+						+"<div style='clear: both'></div>"
+						+"<div id='comment-id"+i+"' style='display: none; margin: 5px;padding: 5px;border-style: solid;"
+						+"	  border-width: 1px;border-color: #BBFFFF;background-color: #EFFFFF'>"
+						+"<textarea id="+temp5+" class='form-control' rows='4' maxlength='50'></textarea>"			  
+						+"  <div  style='text-align: right;margin-top: 5px'> <button onclick='publishComment("+aList[i].id+ ",\""+ temp4 + "\",\""+ temp5 + "\")' type='button' class='btn btn-success' >发布评论</button></div>"
+						+"<div id="+temp4+"></div>"
+						+"</div>"
+						+"<br /><br />"
+						);
+					}
+				}//for
+				if(len>=2)	$("#showDetailOther").show();
+			});
+		}//if
+	 }//);
+	 
+		/* 
+		 * 动态点赞
+		 * 此效果包含css3，部分浏览器不兼容（如：IE10以下的版本）
+		*/
+	function zan(id,outImg,count,add,img){
+		var $outImg = $("#"+outImg);
+		var $add = $("#"+add);
+		var $count = $("#"+count);
+		var $img = $("#"+img);
+		var num=parseInt($count.text());
+		if($img.attr("src") == ("images/yizan.png")){//已赞，取消赞时触发	
+			$outImg.html("<img id="+img+" src='images/zan.png'  class='animation' />");
+			$count.removeClass("hover");
+			$add.show().html('<em class="add-animation">-1</em>');
+			$(".add-animation").removeClass("hover");
+			num -=1;
+			var param={"visitorId":openid,"answerId":id};
+			var addUrl = "cancelLikeAnswer";
+			$.get(addUrl,param);
+			$count.text(num);
+		}else{//点赞
+			$outImg.html("<img id="+img+" src='images/yizan.png'  class='animation' />");
+			$count.addClass("hover");
+			$add.show().html('<em class="add-animation">+1</em>');
+			$(".add-animation").addClass("hover");
+			num +=1;
+			var param={"visitorId":openid,"answerId":id};
+			var reduceUrl = "likeAnswer";
+			$.get(reduceUrl,param);
+			$count.text(num);
+		}
+	}	
+	 
+	//用户发表答案
+	 $(function(){
+		$("#myAnswer").click(function () {
+			$('#myModal').modal();
+		});
+		
+		$("#btn_submit").click(function () {
+			 var $answer = $("#txt").val();
+			 var url = "answerQuestion";
+			 var $question = $("#h3Id").text();
+			 if($answer!= null && $answer!=''){
+			    var params = {"visitorId": openid,"questionId": questionId,"answerContent": $answer};
+				$.get(url,params)
+			 }
+			 window.location.reload();
+		});
+	  })
+	//获取当前时间
+	function CurentTime()
+    { 
+        var now = new Date();
+        
+        var year = now.getFullYear();       //年
+        var month = now.getMonth() + 1;     //月
+        var day = now.getDate();            //日
+        
+        var hh = now.getHours();            //时
+        var mm = now.getMinutes();          //分
+        var ss = now.getSeconds();           //秒
+        
+        var clock = year + "-";
+        
+        if(month < 10)
+            clock += "0";
+        
+        clock += month + "-";
+        
+        if(day < 10)
+            clock += "0";
+            
+        clock += day + " ";
+        
+        if(hh < 10)
+            clock += "0";
+            
+        clock += hh + ":";
+        if (mm < 10) clock += '0'; 
+        clock += mm; 
+         
+        //if (ss < 10) clock += '0'; 
+        //clock += ss; 
+        return(clock); 
+	}
+	
+	 //获取url的传参
+	 function getUrlParam(name) {
+         var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+         var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+         if (r != null) return unescape(r[2]); return null; //返回参数值
+     }
+  </script>
+</body>
+</html>

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>搜索</title>
+
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<script type="text/javascript" src="js/jquery-3.3.1.min.js" ></script>
+	<script type="text/javascript" src="js/bootstrap.min.js" ></script>
+    <style type="text/css" >
+		body { padding-top: 50px; }
+		html { overflow-y: scroll; }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+
+<!-- 菜单栏 -->
+<div id="topMenu"></div>
+<br/><br/>
+<div id="appendQuestion" class="row">'
+  <!-- 问题列表 -->
+</div>
+ 
+ <div style="text-align: center">
+<nav aria-label="Page navigation">
+  <ul id="page-id" class="pagination">
+   		<!--后续页-->
+  </ul>
+</nav>
+</div>	
+
+</div><!--containt结束-->
+
+<!-- 添加答案 -->
+<div id="temp-id" style="display: none"></div>
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+ <div class="modal-dialog" role="document">
+ <div class="modal-content">
+ 
+ <div class="modal-header">
+  <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+  <h4 class="modal-title" id="myModalLabel">我的答案</h4>
+ </div>
+
+ <div class="modal-body">
+  <div class="form-group">
+   <!--<label for="txt_departmentname">答案</label>
+   <input type="text"  class="form-control" id="txt" placeholder="我的答案">-->
+   <div class="form-group" style="margin-top:30px">
+    <textarea id="txt" class="form-control" rows="5"></textarea>
+   </div>
+  </div>
+ </div>
+
+ <div class="modal-footer">
+  <button type="button" class="btn btn-default" data-dismiss="modal"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span>关闭</button>
+  <button type="button" id="btn_submit" class="btn btn-primary" data-dismiss="modal"><span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>发表</button>
+ </div>
+ 
+ </div>
+ </div>
+</div>
+
+<script type="text/javascript">
+
+var openid = getUrlParam("openid");
+
+//添加头部
+$("#topMenu").load("topMenu.html");
+
+
+//用户发表答案
+function answer(questionId){
+	$("#myModal").modal();	
+	$("#temp-id").text(questionId);
+}
+//用户发表答案
+$(function(){
+	$("#btn_submit").click(function () {
+		 var $answer = $("#txt").val();
+		 var $questionId = $("#temp-id").text();
+		 var $question = $("#h3Id").text();
+		 if($answer!= null && $answer!=''){
+		    var params = {"visitorId":openid, "questionId":$questionId,"answerContent":$answer};
+			$.get("answerQuestionAndJumpToQuestionDetail",params,function(data){ 
+				window.location.href= "detail.html?id="+$questionId+"&openid="+openid;
+			});
+		}
+	});
+ })
+ 
+
+//计算页数
+var currentPage = 1;
+var maxPage = 5;
+var pageSize = 10;
+function count(obj,page){
+	if(page == 0){
+		currentPage = obj.innerText;//获取标签中的值
+		pageList(currentPage);
+	}
+	else if(page == -1){
+		currentPage = Number(currentPage) - 1;
+		if(currentPage < 1){
+			alert("无效翻页");
+		}else{
+			pageList(currentPage);
+		}				
+	}else{
+		currentPage = Number(currentPage) + 1;
+		if(currentPage > maxPage){
+			alert("无效翻页");
+		}else{
+			pageList(currentPage);
+		}	
+	}
+}
+
+//默认显示第一页
+window.onload=function(){
+	if(openid!= null && openid!=''){
+	  	pageList(1);
+	}
+}
+
+//分页查看问题
+function pageList(currentPage){
+	$("#appendQuestion").empty();
+	var params = {"visitorId" : openid,"currentPage" : currentPage};
+	$.getJSON("getNewEmptyQuestionList",params,function(data){
+		//分页
+		var curPage   = parseInt(currentPage);
+		var startPage = 1;
+		if(curPage / pageSize -1 == 0){
+			startPage = curPage;
+		}
+		var endPage = data.pages;
+		maxPage = data.pages;
+		if(data.pages - startPage >= pageSize){
+			endPage = startPage + pageSize -1;
+		}
+		$("#page-id").html("");
+		$("#page-id").append('<li ><a href="#" onclick="count(this,-1)"><span aria-hidden="true">&laquo;</span></a></li>');
+		for(var i=startPage; i<=endPage; i++){
+			$("#page-id").append('<li><a href="#" onclick="count(this,0)">'+i+'</a></li>');
+		}
+	    $("#page-id").append('<li ><a href="#" onclick="count(this,1)"><span aria-hidden="true">&raquo;</span></a></li>');
+	    //添加答案		
+	    $.ajaxSettings.async = false;
+		$.each(data.list, function (i, a){	
+			var nickname;
+			var headImgUrl;
+			$.getJSON("userDetail",{"visitorId": a.authorId},function(data){
+				nickname   = data.nickname;
+				headImgUrl = data.headImgUrl;
+			});	 
+			var tempId = "tempId"+a.id;
+			$("#appendQuestion").append($(	
+					 "<div id="+tempId+" style='display: none'></div>"
+					+"<div class='col-sm-6 '>"
+					+"<div class='thumbnail'>"
+					  +"<img class='img-circle'  style='height: 50px;max-width: 100%;' src="+headImgUrl+">"
+					    +" <div class='caption'>"		
+						+" <p>"+a.content+"</p>"
+						+" <div style='text-align: right'><span>"+nickname+"</span> <span>"+a.createTime+"</span></div>"
+						+" <p style='text-align: right'><button id='myAnswer'  onclick='answer(\""+ a.id + "\")' href='#' class='btn btn-primary' >回答</button></p>"
+						+"</div>"
+						+"</div>"
+						+"</div>"
+				
+			));
+		});	
+		$.ajaxSettings.async = true; 
+	}); 
+}
+
+
+//获取url的传参
+function getUrlParam(name) {
+    var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+    var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+    if (r != null) return unescape(r[2]); return null; //返回参数值
+}
+</script>
+</body>
+</html>

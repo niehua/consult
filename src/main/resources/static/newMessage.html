@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>搜索</title>
+
+	<!-- 导入 css-->
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<!--导入jquery.js-->
+	<script type="text/javascript" src="js/jquery-3.3.1.min.js" ></script>
+			
+	<!--导入bootstrap.js-->
+	<script type="text/javascript" src="js/bootstrap.min.js" ></script>
+  
+    <style type="text/css" >
+		body { padding-top: 50px; }
+		html { overflow-y: scroll; }
+    </style>
+
+</head>
+<body>
+
+<div class="container">
+	
+<!-- 菜单栏 -->
+<div id="topMenu"></div>	
+<br />
+<div id="set-has-read" style="display: block" class="btn-group btn-group-justified" role="group" aria-label="...">
+  <div class="btn-group" role="group">
+    <button onclick="allRead()" type="button" class="btn btn-default">全部已读</button>
+  </div>
+</div>
+<br />
+ <div id="new-msg-list" style="margin:10px;">
+ 
+				<!--新消息列表-->
+ </div>
+
+</div><!--containt结束-->
+
+<script type="text/javascript">
+
+var openid = getUrlParam("openid");
+var url = "getNewMessageByUserId";
+
+function allRead(){
+	$.getJSON("setAllNewMessagesHasRead",{"visitorId": openid});
+	window.location.reload();
+}
+//添加头部
+$("#topMenu").load("topMenu.html");
+		//新消息列表
+		$(function(){
+		    if(openid!= null && openid!=''){
+		    	var params = {"visitorId" : openid};
+		    	$.ajaxSettings.async = false;
+		    	if(openid!= null && openid!=''){
+		    		$.getJSON("getNumberOfNewMessage",{"visitorId": openid},function(data){
+		    			if(data == 0){
+		    				url = "getAllMessageByUserId";
+		    				$("#set-has-read").hide();
+		    			}		
+		    		});
+		    	}
+		    	$.ajaxSettings.async = true; 
+				$.getJSON(url,params,function(data){
+					$.each(data, function (i, a){
+						var info = "赞了你";
+						if(a.typeFlag == 1){
+							info = "回复了你";
+						}else if(a.typeFlag == 2){
+							info = "评论了你";
+						}
+						//查找头像和昵称
+						var headimgurl = "";
+						var nickname = "";
+						$.ajaxSettings.async = false;
+						$.getJSON("userDetail","visitorId="+a.senderId,function(dataUser){	
+								nickname   = dataUser.nickname;
+								headimgurl = dataUser.headImgUrl;
+						});	
+						$.ajaxSettings.async = true; 
+						$("#new-msg-list").append($(
+							"<div class='list-group'>"
+							+"<a href='message.html?id="+a.id+"&openid="+openid+"' class='list-group-item' target='_Blank'>"
+							+"<div class='text-primary '>"+nickname+" "+info+"</div>"
+							+"</p>"
+							+"<div class=''>"+a.content+"</div>"
+							+"<h6 style='text-align: right'>"+a.createTime+"</h6>"
+							+"</a>"
+							+"</div>"
+						));
+					});																						
+				});
+			}
+		});
+		
+		//获取url的传参
+		 function getUrlParam(name) {
+	         var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)"); //构造一个含有目标参数的正则表达式对象
+	         var r = window.location.search.substr(1).match(reg);  //匹配目标参数
+	         if (r != null) return unescape(r[2]); return null; //返回参数值
+	     }
+</script>
+</body>
+</html>
