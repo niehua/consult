@@ -1,5 +1,7 @@
 package niehua.consult.wechat.util;
 
+import org.springframework.stereotype.Component;
+
 import javax.net.ssl.*;
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -11,8 +13,10 @@ import java.security.cert.X509Certificate;
 /**
  * 访问网络用到的工具类
  */
-public class NetWorkHelper {
-	
+@Component
+public class HttpsRequest {
+
+    //证书信任管理器
 	private X509TrustManager xtm = new X509TrustManager() {
         @Override
         public X509Certificate[] getAcceptedIssuers() {
@@ -48,11 +52,8 @@ public class NetWorkHelper {
             ctx.init(null, tm, null);
 
             con.setSSLSocketFactory(ctx.getSocketFactory());
-            con.setHostnameVerifier(new HostnameVerifier() {
-                @Override
-                public boolean verify(String arg0, SSLSession arg1) {
+            con.setHostnameVerifier((String arg0, SSLSession arg1) -> {
                     return true;
-                }
             });
 
 

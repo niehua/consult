@@ -6,7 +6,7 @@ import com.github.pagehelper.PageInfo;
 import niehua.consult.entity.*;
 import niehua.consult.service.*;
 import niehua.consult.wechat.util.LoginUtil;
-import niehua.consult.wechat.util.NetWorkHelper;
+import niehua.consult.wechat.util.HttpsRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,6 +38,9 @@ public class ConsultController implements ControllerInterface {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private HttpsRequest httpsRequest;
 
     private Map<String, Object> map;
 
@@ -82,9 +85,8 @@ public class ConsultController implements ControllerInterface {
     public String access_token(@RequestParam(name = "code", required = false) String CODE) {
         //System.out.println("获得code:"+CODE);
 
-        NetWorkHelper https = new NetWorkHelper();
         String urlAccess_token = LoginUtil.getWebAccess(APPID, SECRET, CODE);
-        String resultAccess_token = https.getHttpsResponse(urlAccess_token, "");
+        String resultAccess_token = httpsRequest.getHttpsResponse(urlAccess_token, "");
         //System.out.println("获取到的access_token="+resultAccess_token);
         //存储返回集
         JSONObject json = JSON.parseObject(resultAccess_token);
@@ -93,7 +95,7 @@ public class ConsultController implements ControllerInterface {
          * @return JSON数据包
          */
         String urlUserInfo = LoginUtil.getUserInfo(json.getString("access_token"), json.getString("openid"));
-        String resultUserInfo = https.getHttpsResponse(urlUserInfo, "");
+        String resultUserInfo = httpsRequest.getHttpsResponse(urlUserInfo, "");
         //System.out.println("获取到的usrtinfo="+resultUserInfo);
         //存储返回集
         JSONObject jsonUI = JSON.parseObject(resultUserInfo);
@@ -102,13 +104,6 @@ public class ConsultController implements ControllerInterface {
                 jsonUI.getString("province"), jsonUI.getString("headimgurl"), jsonUI.getInteger("sex").byteValue());
         return "redirect:/index.html?openid=" + openid;
     }
-
-//   	public Map login(String visitorId, String nikeName, String province, String headImgUrl, Integer sex) {
-//   	    map = new HashMap<>();
-//   	    map.put("sizeOfNewMessageList", messageService.getSizeOfNewMessageListByUserId(visitorId));
-//   	    userService.loginByUserId(visitorId, nikeName, province, headImgUrl, sex.byteValue());
-//   	    return map;
-//   	}
 
     /*
  根据关键字搜索问题，其回答是精简的，并分页返回

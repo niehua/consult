@@ -46,7 +46,6 @@
 		<!-- mysql-->
 		<dependency>
 			<groupId>mysql</groupId>
-			<artifactId>com.mysql.cj.jdbc.Driver</artifactId>
 		</dependency>
 
 		<!-- 分页插件-->
